@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/DrSloth/heartfelt"
 description = "A channel for single updatable values."
 keywords = ["channel", "concurrent"]
-include = ["Readme.md", "LICENSE"]
+readme = "Readme.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
