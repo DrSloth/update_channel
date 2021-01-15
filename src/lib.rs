@@ -1,15 +1,39 @@
 //! Single value multiple producer multiple consumer update channel.
 //! Both the receiver and channel can be created with the update_channel
 //! and update_channel_with functions.
-//! 
+//!
 //! The channels are mostly lock free, multiple readers can access the shared value at the same time.
-//! The only way to really block is by calling the borrow_locked method and holding onto the RwLockReadGuard
-//! or by having a lot of writes happen at the same time. <br />
+//! The only way to really block is by calling the [`borrow_locked`]((struct.Receiver.html#method.borrow_locked))
+//! method and holding onto the RwLockReadGuard
+//! or by having a lot of writes happen at the same time. <br /> <br />
 //! The update channel can practically be seen as a single value which can be updated by an updater
 //! and then a receiver can update its own internal value with the
 //! [`receive_update`]((struct.Receiver.html#method.receive_update)) method by cloning the new value in its internal buffer.
 //! If only a single receiver is used the take_update method is a more efficient alternative to the receive_update method
-
+//!
+//! # Example
+//!
+//! ```
+//! use update_channel::channel_with;
+//! use std::thread::spawn;
+//! 
+//! let (mut receiver, updater) = channel_with(0);
+//! assert_eq!(*receiver.borrow(), 0);
+//! 
+//! spawn(move || {
+//!     updater.update(2).unwrap(); // shared value is 2
+//!     updater.update(12).unwrap(); // shared value is 12
+//! })
+//! .join().unwrap();
+//! 
+//! // Shared value is 2 but internal value is 0
+//! assert_eq!(*receiver.borrow(), 0);
+//! // Update the latest value
+//! receiver.recv_update().unwrap();
+//! // Shared value is 12 and internal value 12
+//! assert_eq!(*receiver.borrow(), 12);
+//! ```
+//!
 
 mod receiver;
 mod updater;
@@ -17,7 +41,10 @@ mod updater;
 pub use receiver::*;
 pub use updater::*;
 
-use std::{sync::{Arc, RwLock}, cell::UnsafeCell};
+use std::{
+    cell::UnsafeCell,
+    sync::{Arc, RwLock},
+};
 
 /// Create a channel where the receiver starts with value as internal value
 pub fn channel_with<T>(value: T) -> (Receiver<T>, Updater<T>) {
@@ -25,12 +52,10 @@ pub fn channel_with<T>(value: T) -> (Receiver<T>, Updater<T>) {
     let weak = Arc::downgrade(&shared);
     let rec = Receiver {
         cell: UnsafeCell::new(value),
-        shared
+        shared,
     };
 
-    let upd = Updater {
-        lock: weak
-    };
+    let upd = Updater { lock: weak };
 
     (rec, upd)
 }
@@ -41,28 +66,27 @@ pub fn channel<T>() -> (Receiver<Option<T>>, Updater<Option<T>>) {
     let weak = Arc::downgrade(&shared);
     let rec = Receiver {
         cell: UnsafeCell::new(None),
-        shared
+        shared,
     };
 
-    let upd = Updater {
-        lock: weak
-    };
+    let upd = Updater { lock: weak };
 
     (rec, upd)
 }
 
-/// Starts the channel with the default value of T 
-pub fn channel_default<T>() -> (Receiver<T>, Updater<T>) where T: Default {
+/// Starts the channel with the default value of T
+pub fn channel_default<T>() -> (Receiver<T>, Updater<T>)
+where
+    T: Default,
+{
     let shared = Arc::new(RwLock::new(None));
     let weak = Arc::downgrade(&shared);
     let rec = Receiver {
         cell: UnsafeCell::new(Default::default()),
-        shared
+        shared,
     };
 
-    let upd = Updater {
-        lock: weak
-    };
+    let upd = Updater { lock: weak };
 
     (rec, upd)
 }
@@ -70,7 +94,10 @@ pub fn channel_default<T>() -> (Receiver<T>, Updater<T>) where T: Default {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::{sync::{Barrier, Arc}, thread::spawn};
+    use std::{
+        sync::{Arc, Barrier},
+        thread::spawn,
+    };
 
     #[test]
     fn creation_default() {
@@ -207,5 +234,24 @@ mod test {
 
         th.join().unwrap();
         th2.join().unwrap();
+    }
+
+    #[test]
+    fn simple() {
+        let (mut receiver, updater) = channel_with(0);
+        assert_eq!(*receiver.borrow(), 0);
+
+        spawn(move || {
+            updater.update(2).unwrap(); // shared value is 2
+            updater.update(12).unwrap(); // shared value is 12
+        })
+        .join().unwrap();
+
+        // Shared value is 2 but internal value is 0
+        assert_eq!(*receiver.borrow(), 0);
+        // Update the latest value
+        receiver.recv_update().unwrap();
+        // Shared value is 12 and internal value 12
+        assert_eq!(*receiver.borrow(), 12);
     }
 }

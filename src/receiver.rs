@@ -3,6 +3,10 @@ use std::{
     sync::{Arc, RwLock, RwLockReadGuard},
 };
 
+/// The receiving half of an update channel
+/// 
+/// This struct holds an internal buffer in which data is held.
+/// The buffer can then be updated with recv_update, take_update usw.
 #[derive(Debug)]
 pub struct Receiver<T> {
     pub(crate) cell: UnsafeCell<T>,

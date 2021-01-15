@@ -1,16 +1,9 @@
-[package]
-name = "update_channel"
-version = "0.1.0"
-authors = ["hassan <hassanabujabir@gmail.com>"]
-edition = "2018"
-license = "mit"
-repository = "https://github.com/DrSloth/heartfelt"
-description = """A channel for single updatable values. The `Updater` can update a shared value and 
+A channel for single updatable values. The `Updater` can update a shared value and 
 a `Receiver` can then update it's own internal value. 
 
 Example: 
 
-```
+```rust
     use update_channel::channel_with;
     use std::thread::spawn;
 
@@ -33,8 +26,4 @@ Example:
 
 update_channel is distributed under the terms of the MIT license.
 
-See LICENSE for more details"""
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
+See LICENSE for more details

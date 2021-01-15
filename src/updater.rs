@@ -1,5 +1,9 @@
 use std::sync::{RwLock, Weak};
 
+/// The updater half of the update channel.
+/// 
+/// You can update the shared value with [`Updater::update`](struct.Updater.html#method.update). <br />
+/// This doesn't mean that receivers directly hold the new value 
 #[derive(Debug, Clone)]
 pub struct Updater<T> {
     pub(crate) lock: Weak<RwLock<Option<T>>>
