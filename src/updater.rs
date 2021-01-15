@@ -12,7 +12,8 @@ impl<T> Updater<T> {
     }
 
     /// Updates the value currently saved in the channel. A receiver can then call update in order
-    /// to check the latest value and write it into its buffer
+    /// to check the latest value and write it into its buffer. If either the RwLock is poisoned, or
+    /// no receiver exists an UpdateError holding the value will be returned.
     pub fn update(&self, value: T) -> Result<(), UpdateError<T>> {
         if let Some(shared) = self.lock.upgrade() {
             if let Ok(mut write) = shared.write() {
@@ -27,13 +28,16 @@ impl<T> Updater<T> {
     }
 }
 
-
+/// An error occurred while updating the update channel
 pub enum UpdateError<T> {
+    /// There is no receiver
     NoReceiver(T),
+    /// The RwLock is poisoned
     Poisoned(T)
 }
 
 impl<T> UpdateError<T> {
+    /// Get contained value the value contained 
     pub fn into_inner(self) -> T {
         match self {
             UpdateError::NoReceiver(v) => v,
@@ -41,6 +45,7 @@ impl<T> UpdateError<T> {
         }
     }
 
+    /// Get a reference to the contained value.
     pub fn inner(&self) -> &T {
         match self {
             UpdateError::NoReceiver(v) => &v,
@@ -50,7 +55,6 @@ impl<T> UpdateError<T> {
 }
 
 unsafe impl<T> Send for Updater<T> {}
-unsafe impl<T> Sync for Updater<T> {}
 
 use std::fmt::{Formatter, Debug, Result as FmtResult};
 
