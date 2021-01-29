@@ -174,3 +174,11 @@ impl std::fmt::Display for ReceiveError {
         write!(f, "{:?}", self)
     }
 }
+
+use std::error::Error;
+
+impl Error for ReceiveError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}

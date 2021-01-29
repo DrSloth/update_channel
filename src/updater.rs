@@ -73,3 +73,11 @@ impl<T> Display for UpdateError<T> where T: Debug {
         write!(f, "UpdateError({:?})", self.inner())
     }
 }
+
+use std::error::Error;
+
+impl<T> Error for UpdateError<T> where T: Debug {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
