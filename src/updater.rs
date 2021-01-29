@@ -60,10 +60,16 @@ impl<T> UpdateError<T> {
 
 unsafe impl<T> Send for Updater<T> {}
 
-use std::fmt::{Formatter, Debug, Result as FmtResult};
+use std::fmt::{Formatter, Debug, Result as FmtResult, Display};
 
 impl<T> Debug for UpdateError<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "UpdateError({:?})", self.inner())
+    }
+}
+
+impl<T> Display for UpdateError<T> where T: Debug {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "UpdateError({:?})", self.inner())
     }
 }

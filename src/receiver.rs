@@ -168,3 +168,9 @@ unsafe impl<T> Send for Receiver<T> where T: Clone {}
 /// An error that might occur while receiving a value
 #[derive(Debug, Clone)]
 pub struct ReceiveError;
+
+impl std::fmt::Display for ReceiveError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
